@@ -1,0 +1,101 @@
+<div class="layout">
+  <nav>
+    <span class="logo">gastos<span class="dot">.</span></span>
+    <button class="btn-ghost" (click)="logout()">salir</button>
+  </nav>
+
+  <main>
+    <!-- Resumen -->
+    <div class="resumen-grid">
+      <div class="card-stat">
+        <span class="label">Ingresos</span>
+        <span class="valor success">{{ formatMonto(resumen?.ingresos || 0) }}</span>
+      </div>
+      <div class="card-stat">
+        <span class="label">Gastos</span>
+        <span class="valor danger">{{ formatMonto(resumen?.gastos || 0) }}</span>
+      </div>
+      <div class="card-stat">
+        <span class="label">Balance</span>
+        <span class="valor" [class.success]="(resumen?.balance || 0) >= 0" [class.danger]="(resumen?.balance || 0) < 0">
+          {{ formatMonto(resumen?.balance || 0) }}
+        </span>
+      </div>
+    </div>
+
+    <div class="content-grid">
+      <!-- Transacciones -->
+      <section class="section">
+        <div class="section-header">
+          <h3>Transacciones</h3>
+          <button class="btn-primary" (click)="mostrarForm = !mostrarForm">
+            {{ mostrarForm ? 'Cancelar' : '+ Nueva' }}
+          </button>
+        </div>
+
+        @if (mostrarForm) {
+          <div class="form-nueva">
+            <input type="text" [(ngModel)]="nuevaDesc" placeholder="Descripción" />
+            <input type="number" [(ngModel)]="nuevaMonto" placeholder="Monto" />
+            <select [(ngModel)]="nuevaTipo">
+              <option value="gasto">Gasto</option>
+              <option value="ingreso">Ingreso</option>
+            </select>
+            <select [(ngModel)]="nuevaCategoriaId">
+              <option [ngValue]="null">Sin categoría</option>
+              @for (cat of categorias; track cat.id) {
+                <option [ngValue]="cat.id">{{ cat.nombre }}</option>
+              }
+            </select>
+            <button class="btn-submit" (click)="crearTransaccion()" [disabled]="loading">
+              {{ loading ? 'Guardando...' : 'Guardar' }}
+            </button>
+          </div>
+        }
+
+        <div class="lista">
+          @for (t of transacciones; track t.id) {
+            <div class="item">
+              <div class="item-info">
+                <span class="item-desc">{{ t.descripcion }}</span>
+                <span class="item-meta">
+                  {{ formatFecha(t.fecha) }}
+                  @if (t.categoria) {
+                    · <span class="cat-badge" [style.background]="t.categoria.color + '22'" [style.color]="t.categoria.color">{{ t.categoria.nombre }}</span>
+                  }
+                </span>
+              </div>
+              <div class="item-right">
+                <span class="item-monto" [class.success]="t.tipo === 'ingreso'" [class.danger]="t.tipo === 'gasto'">
+                  {{ t.tipo === 'ingreso' ? '+' : '-' }}{{ formatMonto(t.monto) }}
+                </span>
+                <button class="btn-delete" (click)="eliminarTransaccion(t.id)">×</button>
+              </div>
+            </div>
+          }
+          @empty {
+            <p class="empty">No hay transacciones aún.</p>
+          }
+        </div>
+      </section>
+
+      <!-- Gastos por categoría -->
+      <section class="section">
+        <div class="section-header">
+          <h3>Por categoría</h3>
+        </div>
+        <div class="lista">
+          @for (g of gastosPorCategoria; track g.categoria) {
+            <div class="item">
+              <span class="item-desc">{{ g.categoria }}</span>
+              <span class="valor danger">{{ formatMonto(g.total) }}</span>
+            </div>
+          }
+          @empty {
+            <p class="empty">Sin datos aún.</p>
+          }
+        </div>
+      </section>
+    </div>
+  </main>
+</div>
